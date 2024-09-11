@@ -5,6 +5,7 @@ import (
 
 	"github.com/jmoiron/sqlx"
 	"github.com/jorgeAM/kata-transactions/application"
+	"github.com/jorgeAM/kata-transactions/common"
 	"github.com/jorgeAM/kata-transactions/infrastructure"
 )
 
@@ -12,6 +13,7 @@ func createUser(db *sqlx.DB) http.HandlerFunc {
 	srv := application.NewCreateUser(
 		infrastructure.NewPostgresUserRepository(db),
 		infrastructure.NewPostgresNotificationRepository(db),
+		common.NewPostgresTransactionalManager(db),
 	)
 
 	return func(w http.ResponseWriter, r *http.Request) {

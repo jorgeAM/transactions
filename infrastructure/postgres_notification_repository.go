@@ -5,6 +5,7 @@ import (
 
 	"github.com/doug-martin/goqu/v9"
 	"github.com/jmoiron/sqlx"
+	"github.com/jorgeAM/kata-transactions/common"
 	"github.com/jorgeAM/kata-transactions/domain"
 )
 
@@ -26,6 +27,14 @@ func NewPostgresNotificationRepository(db *sqlx.DB) *PostgresNotificationReposit
 	}
 }
 
+func (p *PostgresNotificationRepository) getInstance(ctx context.Context) sqlx.ExtContext {
+	if tx, ok := ctx.Value(common.TxKey("tx")).(*sqlx.Tx); ok {
+		return tx
+	}
+
+	return p.db
+}
+
 func (p *PostgresNotificationRepository) Save(ctx context.Context, notification *domain.Notification) error {
 	dto := &postgresNotification{
 		ID:      notification.ID,
@@ -42,7 +51,7 @@ func (p *PostgresNotificationRepository) Save(ctx context.Context, notification 
 		return err
 	}
 
-	_, err = p.db.ExecContext(ctx, sql)
+	_, err = p.getInstance(ctx).ExecContext(ctx, sql)
 	if err != nil {
 		return err
 	}

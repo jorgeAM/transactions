@@ -5,6 +5,7 @@ import (
 
 	"github.com/doug-martin/goqu/v9"
 	"github.com/jmoiron/sqlx"
+	"github.com/jorgeAM/kata-transactions/common"
 	"github.com/jorgeAM/kata-transactions/domain"
 )
 
@@ -26,6 +27,14 @@ func NewPostgresUserRepository(db *sqlx.DB) *PostgresUserRepository {
 	}
 }
 
+func (p *PostgresUserRepository) getInstance(ctx context.Context) sqlx.ExtContext {
+	if tx, ok := ctx.Value(common.TxKey("tx")).(*sqlx.Tx); ok {
+		return tx
+	}
+
+	return p.db
+}
+
 func (p *PostgresUserRepository) Save(ctx context.Context, user *domain.User) error {
 	dto := &postgresUser{
 		ID:    user.ID,
@@ -42,7 +51,7 @@ func (p *PostgresUserRepository) Save(ctx context.Context, user *domain.User) er
 		return err
 	}
 
-	_, err = p.db.ExecContext(ctx, sql)
+	_, err = p.getInstance(ctx).ExecContext(ctx, sql)
 	if err != nil {
 		return err
 	}
